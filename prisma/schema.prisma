@@ -1,0 +1,182 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ProductCondition {
+  NEW
+  LIKE_NEW
+  GOOD
+  FAIR
+  POOR
+}
+
+enum ProductStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  DELETED
+}
+
+enum RequirementStatus {
+  OPEN
+  CLOSED
+  EXPIRED
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+}
+
+model User {
+  id                String             @id @default(uuid()) @db.Uuid
+  full_name         String             @db.VarChar(100)
+  email             String             @unique @db.VarChar(255)
+  phone             String             @unique @db.VarChar(15)
+  password          String             @db.VarChar(255)
+  avatar_url        String?            @db.Text
+  location          String?            @db.VarChar(255)
+  role              Role               @default(USER)
+  is_verified       Boolean            @default(false)
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @updatedAt
+  
+  products          Product[]          @relation("UserProducts")
+  requirements      BuyerRequirement[] @relation("UserRequirements")
+  wishlist          Wishlist[]
+  sent_messages     Message[]          @relation("SentMessages")
+  received_messages Message[]          @relation("ReceivedMessages")
+  reports           Report[]           @relation("UserReports")
+}
+
+model Category {
+  id            String             @id @default(uuid()) @db.Uuid
+  category_name String             @db.VarChar(100)
+  created_at    DateTime           @default(now())
+  
+  products      Product[]
+  requirements  BuyerRequirement[]
+}
+
+model Product {
+  id                 String             @id @default(uuid()) @db.Uuid
+  seller_id          String             @db.Uuid
+  category_id        String             @db.Uuid
+  title              String             @db.VarChar(100)
+  description        String             @db.Text
+  original_price     Decimal?           @db.Decimal(10, 2)
+  selling_price      Decimal            @db.Decimal(10, 2)
+  condition          ProductCondition
+  status             ProductStatus      @default(AVAILABLE)
+  location           String             @db.VarChar(255)
+  ai_estimated_price Decimal?           @db.Decimal(10, 2)
+  ai_condition       String?            @db.VarChar(50)
+  created_at         DateTime           @default(now())
+  updated_at         DateTime           @updatedAt
+
+  seller             User               @relation("UserProducts", fields: [seller_id], references: [id], onDelete: Cascade)
+  category           Category           @relation(fields: [category_id], references: [id], onDelete: Restrict)
+  images             ProductImage[]
+  wishlists          Wishlist[]
+  reports            Report[]
+  messages           Message[]
+  ai_price_history   AiPriceHistory[]
+  ai_condition_reps  AiConditionReport[]
+}
+
+model ProductImage {
+  id         String   @id @default(uuid()) @db.Uuid
+  product_id String   @db.Uuid
+  image_url  String   @db.Text
+  created_at DateTime @default(now())
+
+  product    Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+}
+
+model BuyerRequirement {
+  id                  String            @id @default(uuid()) @db.Uuid
+  buyer_id            String            @db.Uuid
+  title               String            @db.VarChar(100)
+  description         String            @db.Text
+  budget              Decimal           @db.Decimal(10, 2)
+  preferred_condition ProductCondition
+  category_id         String            @db.Uuid
+  location            String            @db.VarChar(255)
+  expiry_date         DateTime          @db.Date
+  status              RequirementStatus @default(OPEN)
+  created_at          DateTime          @default(now())
+
+  buyer               User              @relation("UserRequirements", fields: [buyer_id], references: [id], onDelete: Cascade)
+  category            Category          @relation(fields: [category_id], references: [id], onDelete: Restrict)
+}
+
+model Wishlist {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  product_id String   @db.Uuid
+  created_at DateTime @default(now())
+
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, product_id])
+}
+
+model Message {
+  id          String   @id @default(uuid()) @db.Uuid
+  sender_id   String   @db.Uuid
+  receiver_id String   @db.Uuid
+  product_id  String   @db.Uuid
+  message     String   @db.Text
+  is_read     Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  sender      User     @relation("SentMessages", fields: [sender_id], references: [id], onDelete: Cascade)
+  receiver    User     @relation("ReceivedMessages", fields: [receiver_id], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+}
+
+model Report {
+  id          String       @id @default(uuid()) @db.Uuid
+  reporter_id String       @db.Uuid
+  product_id  String       @db.Uuid
+  reason      String       @db.Text
+  status      ReportStatus @default(PENDING)
+  created_at  DateTime     @default(now())
+
+  reporter    User         @relation("UserReports", fields: [reporter_id], references: [id], onDelete: Cascade)
+  product     Product      @relation(fields: [product_id], references: [id], onDelete: Cascade)
+}
+
+model AiPriceHistory {
+  id              String   @id @default(uuid()) @db.Uuid
+  product_id      String   @db.Uuid
+  estimated_price Decimal  @db.Decimal(10, 2)
+  confidence      Decimal  @db.Decimal(5, 2)
+  created_at      DateTime @default(now())
+
+  product         Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+}
+
+model AiConditionReport {
+  id                  String   @id @default(uuid()) @db.Uuid
+  product_id          String   @db.Uuid
+  estimated_condition String   @db.VarChar(50)
+  confidence          Decimal  @db.Decimal(5, 2)
+  detected_damage     String   @db.Text
+  analyzed_at         DateTime @default(now())
+
+  product             Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+}

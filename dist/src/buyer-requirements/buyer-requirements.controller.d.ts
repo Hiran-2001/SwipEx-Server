@@ -1,0 +1,114 @@
+import { BuyerRequirementsService } from './buyer-requirements.service';
+import { CreateRequirementDto } from './dto/create-requirement.dto';
+export declare class BuyerRequirementsController {
+    private requirementsService;
+    constructor(requirementsService: BuyerRequirementsService);
+    create(user: any, dto: CreateRequirementDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            category: {
+                id: string;
+                category_name: string;
+                created_at: Date;
+            };
+        } & {
+            id: string;
+            created_at: Date;
+            location: string;
+            description: string;
+            title: string;
+            category_id: string;
+            status: import(".prisma/client").$Enums.RequirementStatus;
+            budget: import("@prisma/client/runtime/library").Decimal;
+            preferred_condition: import(".prisma/client").$Enums.ProductCondition;
+            expiry_date: Date;
+            buyer_id: string;
+        };
+    }>;
+    findAll(category_id?: string, max_budget?: string, location?: string): Promise<{
+        success: boolean;
+        data: ({
+            category: {
+                id: string;
+                category_name: string;
+                created_at: Date;
+            };
+            buyer: {
+                id: string;
+                full_name: string;
+                email: string;
+                phone: string;
+                avatar_url: string | null;
+            };
+        } & {
+            id: string;
+            created_at: Date;
+            location: string;
+            description: string;
+            title: string;
+            category_id: string;
+            status: import(".prisma/client").$Enums.RequirementStatus;
+            budget: import("@prisma/client/runtime/library").Decimal;
+            preferred_condition: import(".prisma/client").$Enums.ProductCondition;
+            expiry_date: Date;
+            buyer_id: string;
+        })[];
+    }>;
+    findOne(id: string): Promise<{
+        success: boolean;
+        data: {
+            category: {
+                id: string;
+                category_name: string;
+                created_at: Date;
+            };
+            buyer: {
+                id: string;
+                full_name: string;
+                email: string;
+                phone: string;
+                avatar_url: string | null;
+            };
+        } & {
+            id: string;
+            created_at: Date;
+            location: string;
+            description: string;
+            title: string;
+            category_id: string;
+            status: import(".prisma/client").$Enums.RequirementStatus;
+            budget: import("@prisma/client/runtime/library").Decimal;
+            preferred_condition: import(".prisma/client").$Enums.ProductCondition;
+            expiry_date: Date;
+            buyer_id: string;
+        };
+    }>;
+    update(user: any, id: string, body: any): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            category: {
+                id: string;
+                category_name: string;
+                created_at: Date;
+            };
+        } & {
+            id: string;
+            created_at: Date;
+            location: string;
+            description: string;
+            title: string;
+            category_id: string;
+            status: import(".prisma/client").$Enums.RequirementStatus;
+            budget: import("@prisma/client/runtime/library").Decimal;
+            preferred_condition: import(".prisma/client").$Enums.ProductCondition;
+            expiry_date: Date;
+            buyer_id: string;
+        };
+    }>;
+    delete(user: any, id: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+}
