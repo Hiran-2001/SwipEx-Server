@@ -11,9 +11,14 @@ import { BuyerRequirementsModule } from './buyer-requirements/buyer-requirements
 import { WishlistModule } from './wishlist/wishlist.module';
 import { MessagesModule } from './messages/messages.module';
 import { ReportsModule } from './reports/reports.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+     ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     PrismaModule,
     AuthModule,
     UsersModule,

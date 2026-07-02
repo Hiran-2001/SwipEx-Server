@@ -10,43 +10,57 @@ exports.AiService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 let AiService = class AiService {
-    estimatePrice(originalPrice, age, condition) {
-        let depreciation = age * 15;
-        if (depreciation > 80)
-            depreciation = 80;
-        let conditionAdjustment = 0;
+    getDepreciationRate(categoryName) {
+        const name = categoryName.toLowerCase();
+        if (name.includes('car') || name.includes('vehicle') || name.includes('bike')) {
+            return 0.12;
+        }
+        if (name.includes('phone') || name.includes('electronics') || name.includes('laptop')) {
+            return 0.25;
+        }
+        if (name.includes('furniture') || name.includes('home')) {
+            return 0.15;
+        }
+        return 0.15;
+    }
+    estimatePrice(originalPrice, age, condition, categoryName = 'default') {
+        const annualRate = this.getDepreciationRate(categoryName);
+        let remainingValuePercentage = Math.pow(1 - annualRate, age);
+        let conditionMultiplier = 1.0;
         switch (condition) {
             case client_1.ProductCondition.NEW:
-                conditionAdjustment = -5;
+                conditionMultiplier = 1.05;
                 break;
             case client_1.ProductCondition.LIKE_NEW:
-                conditionAdjustment = 5;
+                conditionMultiplier = 0.95;
                 break;
             case client_1.ProductCondition.GOOD:
-                conditionAdjustment = 15;
+                conditionMultiplier = 0.85;
                 break;
             case client_1.ProductCondition.FAIR:
-                conditionAdjustment = 30;
+                conditionMultiplier = 0.70;
                 break;
             case client_1.ProductCondition.POOR:
-                conditionAdjustment = 50;
+                conditionMultiplier = 0.45;
                 break;
         }
-        const totalDepreciation = Math.min(90, Math.max(10, depreciation + conditionAdjustment));
-        const estimatedPrice = Math.round(originalPrice * (100 - totalDepreciation) / 100);
+        let finalFactor = remainingValuePercentage * conditionMultiplier;
+        finalFactor = Math.max(0.12, Math.min(1.0, finalFactor));
+        const estimatedPrice = Math.round(originalPrice * finalFactor);
+        const totalDepreciationLoss = Math.round((1 - finalFactor) * 100);
         let confidence = 'High';
-        if (age > 4) {
+        if (age > 8) {
             confidence = 'Low';
         }
-        else if (age > 2) {
+        else if (age > 3) {
             confidence = 'Medium';
         }
         const rangeMin = Math.round(estimatedPrice * 0.9);
         const rangeMax = Math.round(estimatedPrice * 1.1);
         const explanations = [
-            `Base depreciation of ${depreciation}% calculated for a product age of ${age} year(s).`,
-            `Adjusted by ${conditionAdjustment}% extra depreciation for ${condition.toLowerCase()} condition.`,
-            `Overall estimated market value is ${100 - totalDepreciation}% of original price.`,
+            `Applied compound depreciation at an annual rate of ${(annualRate * 100).toFixed(0)}% for ${age} year(s).`,
+            `Adjusted value based on item condition evaluated as ${condition.toLowerCase()}.`,
+            `Overall remaining market value estimated at ${(finalFactor * 100).toFixed(0)}% of original cost.`,
         ];
         return {
             success: true,

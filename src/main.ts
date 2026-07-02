@@ -7,7 +7,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.enableCors({
-    origin: '*',
+    origin: ['http://localhost:5173', 'https://swip-ex.vercel.app'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: '*',
   });

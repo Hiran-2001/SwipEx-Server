@@ -1,6 +1,7 @@
 import { ProductCondition } from '@prisma/client';
 export declare class AiService {
-    estimatePrice(originalPrice: number, age: number, condition: ProductCondition): {
+    private getDepreciationRate;
+    estimatePrice(originalPrice: number, age: number, condition: ProductCondition, categoryName?: string): {
         success: boolean;
         data: {
             estimatedPrice: number;

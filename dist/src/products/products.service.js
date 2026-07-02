@@ -52,7 +52,7 @@ let ProductsService = class ProductsService {
         let aiEstimatedPrice = null;
         let aiEstimateConfidence = 'Low';
         if (originalPrice) {
-            const priceEstimate = this.aiService.estimatePrice(originalPrice, age, dto.condition);
+            const priceEstimate = this.aiService.estimatePrice(originalPrice, age, dto.condition, dto.category_name);
             if (priceEstimate.success) {
                 aiEstimatedPrice = priceEstimate.data.estimatedPrice;
                 aiEstimateConfidence = priceEstimate.data.confidence;

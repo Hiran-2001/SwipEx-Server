@@ -3,39 +3,65 @@ import { ProductCondition } from '@prisma/client';
 
 @Injectable()
 export class AiService {
-  estimatePrice(originalPrice: number, age: number, condition: ProductCondition) {
-    // Base depreciation: 15% per year
-    let depreciation = age * 15;
-    if (depreciation > 80) depreciation = 80; // Caps base depreciation at 80%
 
-    // Condition adjustments
-    let conditionAdjustment = 0;
+  private getDepreciationRate(categoryName: string): number {
+    const name = categoryName.toLowerCase();
+    
+    if (name.includes('car') || name.includes('vehicle') || name.includes('bike')) {
+      // Vehicles drop fast initially, but flatten out over time (approx 10-12% compound)
+      return 0.12; 
+    }
+    if (name.includes('phone') || name.includes('electronics') || name.includes('laptop')) {
+      // Tech items depreciate much faster
+      return 0.25; 
+    }
+    if (name.includes('furniture') || name.includes('home')) {
+      return 0.15;
+    }
+    
+    // Default fallback rate (15%)
+    return 0.15; 
+  }
+
+  estimatePrice(originalPrice: number, age: number, condition: ProductCondition, categoryName = 'default') {
+    const annualRate = this.getDepreciationRate(categoryName);
+
+    // 1. COMPOUND DEPRECIATION MATH: Remaining Value = Original * (1 - rate)^age
+    // This naturally prevents an asset from dropping to zero, flattening beautifully over time.
+    let remainingValuePercentage = Math.pow(1 - annualRate, age);
+
+    // 2. Condition adjustments applied directly to the remaining value scale
+    let conditionMultiplier = 1.0; 
     switch (condition) {
       case ProductCondition.NEW:
-        conditionAdjustment = -5; // 5% premium/value retention
+        conditionMultiplier = 1.05; // 5% bonus for sealed items
         break;
       case ProductCondition.LIKE_NEW:
-        conditionAdjustment = 5; // 5% extra depreciation
+        conditionMultiplier = 0.95; // 5% drop
         break;
       case ProductCondition.GOOD:
-        conditionAdjustment = 15; // 15% extra depreciation
+        conditionMultiplier = 0.85; // 15% drop
         break;
       case ProductCondition.FAIR:
-        conditionAdjustment = 30; // 30% extra depreciation
+        conditionMultiplier = 0.70; // 30% drop
         break;
       case ProductCondition.POOR:
-        conditionAdjustment = 50; // 50% extra depreciation
+        conditionMultiplier = 0.45; // 55% drop
         break;
     }
 
-    const totalDepreciation = Math.min(90, Math.max(10, depreciation + conditionAdjustment));
-    const estimatedPrice = Math.round(originalPrice * (100 - totalDepreciation) / 100);
-    
-    // Confidence score based on age
+    // Apply multiplier and set a floor price (e.g., an asset is rarely worth less than 12% of its original cost)
+    let finalFactor = remainingValuePercentage * conditionMultiplier;
+    finalFactor = Math.max(0.12, Math.min(1.0, finalFactor));
+
+    const estimatedPrice = Math.round(originalPrice * finalFactor);
+    const totalDepreciationLoss = Math.round((1 - finalFactor) * 100);
+
+    // 3. Dynamic confidence metrics
     let confidence = 'High';
-    if (age > 4) {
-      confidence = 'Low';
-    } else if (age > 2) {
+    if (age > 8) {
+      confidence = 'Low'; // Long periods are highly volatile
+    } else if (age > 3) {
       confidence = 'Medium';
     }
 
@@ -43,11 +69,10 @@ export class AiService {
     const rangeMin = Math.round(estimatedPrice * 0.9);
     const rangeMax = Math.round(estimatedPrice * 1.1);
 
-    // Explainable output lines
     const explanations = [
-      `Base depreciation of ${depreciation}% calculated for a product age of ${age} year(s).`,
-      `Adjusted by ${conditionAdjustment}% extra depreciation for ${condition.toLowerCase()} condition.`,
-      `Overall estimated market value is ${100 - totalDepreciation}% of original price.`,
+      `Applied compound depreciation at an annual rate of ${(annualRate * 100).toFixed(0)}% for ${age} year(s).`,
+      `Adjusted value based on item condition evaluated as ${condition.toLowerCase()}.`,
+      `Overall remaining market value estimated at ${(finalFactor * 100).toFixed(0)}% of original cost.`,
     ];
 
     return {

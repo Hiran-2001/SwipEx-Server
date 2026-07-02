@@ -6,6 +6,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { ProductCondition, ProductStatus } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+// import { S3Service } from 'src/products/s3.Service';
 
 @Injectable()
 export class ProductsService {
@@ -13,6 +14,7 @@ export class ProductsService {
     private prisma: PrismaService,
     private cloudinaryService: CloudinaryService,
     private aiService: AiService,
+    // private s3Service: S3Service 
   ) {}
 
   async create(userId: string, dto: CreateProductDto, files: Express.Multer.File[]) {
@@ -47,6 +49,13 @@ export class ProductsService {
     for (const file of files) {
       // const url = await this.cloudinaryService.uploadImage(file);
       // imageUrls.push(url);
+
+      // const uploadPromises = files.map(async (file) => {
+      //     const fileName = `products/${Date.now()}-${file.originalname}`;
+      //     return this.s3Service.uploadFile(file, fileName)
+      //   });
+      //   imageUrls = await Promise.all(uploadPromises);
+
       imageUrls = files.map((file) => this.saveFileLocally(file));
     }
 
@@ -54,7 +63,7 @@ export class ProductsService {
     let aiEstimatedPrice = null;
     let aiEstimateConfidence = 'Low';
     if (originalPrice) {
-      const priceEstimate = this.aiService.estimatePrice(originalPrice, age, dto.condition);
+      const priceEstimate = this.aiService.estimatePrice(originalPrice, age, dto.condition, dto.category_name);
       if (priceEstimate.success) {
         aiEstimatedPrice = priceEstimate.data.estimatedPrice;
         aiEstimateConfidence = priceEstimate.data.confidence;

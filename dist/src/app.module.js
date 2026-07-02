@@ -20,12 +20,17 @@ const buyer_requirements_module_1 = require("./buyer-requirements/buyer-requirem
 const wishlist_module_1 = require("./wishlist/wishlist.module");
 const messages_module_1 = require("./messages/messages.module");
 const reports_module_1 = require("./reports/reports.module");
+const config_1 = require("@nestjs/config");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            config_1.ConfigModule.forRoot({
+                isGlobal: true,
+                envFilePath: '.env',
+            }),
             prisma_module_1.PrismaModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,

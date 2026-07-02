@@ -16,6 +16,10 @@ export class CreateProductDto {
   @IsNotEmpty()
   category_id: string;
 
+  @IsString()
+  @IsNotEmpty()
+  category_name: string;
+
   @IsNumberString()
   @IsNotEmpty()
   selling_price: string;

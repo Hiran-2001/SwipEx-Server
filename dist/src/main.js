@@ -6,7 +6,7 @@ const path_1 = require("path");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.enableCors({
-        origin: '*',
+        origin: ['http://localhost:5173', 'https://swip-ex.vercel.app'],
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
         allowedHeaders: '*',
     });
