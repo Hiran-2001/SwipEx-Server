@@ -7,11 +7,10 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.enableCors({
-  origin: 'https://swip-ex.vercel.app, http://localhost:5173', // Avoid wildcard if passing tokens
+  origin: '*', // Avoid wildcard if passing tokens
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   credentials: true,
-  allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
-});
+  allowedHeaders: 'Content-Type, Accept, Authorization',});
 
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
